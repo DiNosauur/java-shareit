@@ -28,15 +28,15 @@ public class ItemController {
     public ResponseEntity<Item> createItem(@Valid @RequestBody ItemDto itemDto,
                                            @RequestHeader("X-Sharer-User-Id") long userId) {
         if (itemDto.getAvailable() == null) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         if (!userService.getUser(userId).isPresent()) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         User user = userService.getUser(userId).get();
         Item item = ItemMapper.toItem(itemDto, user, null);
         if (!service.checkItem(item)) {
-            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
         return new ResponseEntity<>(service.saveItem(item), HttpStatus.CREATED);
     }
@@ -46,33 +46,33 @@ public class ItemController {
                                            @RequestBody ItemDto itemDto,
                                            @RequestHeader("X-Sharer-User-Id") long userId) {
         if (!userService.getUser(userId).isPresent()) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         User user = userService.getUser(userId).get();
         itemDto.setId(id);
         Item item = ItemMapper.toItem(itemDto, user, null);
         if (!service.getItem(id).isPresent() ||
                 !service.getItem(id).get().getOwner().equals(user)) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         if (!service.checkItem(item)) {
-            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
         return service.updateItem(item).map(updatedItem -> new ResponseEntity<>(updatedItem, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Item> findItemById(@PathVariable long id) {
         return service.getItem(id).map(item -> new ResponseEntity<>(item, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Item> deleteItemById(@PathVariable long id,
                                                @RequestHeader("X-Sharer-User-Id") long userId) {
-        return service.deleteItem(id, userId) ? new ResponseEntity<>(null, HttpStatus.OK)
-                : new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return service.deleteItem(id, userId) ? new ResponseEntity<>(HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/search")
