@@ -3,7 +3,7 @@ package ru.practicum.shareit.user;
 import java.util.Collection;
 import java.util.Optional;
 
-interface UserService {
+public interface UserService {
     Collection<User> getAllUsers();
     User saveUser(User user);
     Optional<User> updateUser(User user);

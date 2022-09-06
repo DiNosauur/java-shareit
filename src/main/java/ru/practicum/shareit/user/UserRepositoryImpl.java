@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
