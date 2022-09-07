@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,9 +67,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean checkUser(User user) {
-        return user.getEmail() == null ||
-               emails.get(user.getEmail()) == null ||
-               emails.get(user.getEmail()) == user.getId();
+    public boolean checkDuplicateEmail(User user) {
+        return user.getEmail() != null
+                && emails.get(user.getEmail()) != null
+                && emails.get(user.getEmail()) != user.getId();
     }
 }

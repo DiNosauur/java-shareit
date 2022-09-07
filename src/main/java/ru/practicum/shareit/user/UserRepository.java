@@ -3,7 +3,7 @@ package ru.practicum.shareit.user;
 import java.util.Collection;
 import java.util.Optional;
 
-interface UserRepository {
+public interface UserRepository {
     Collection<User> findAll();
 
     User save(User user);
@@ -14,5 +14,5 @@ interface UserRepository {
 
     Optional<User> get(long id);
 
-    boolean checkUser(User user);
+    boolean checkDuplicateEmail(User user);
 }

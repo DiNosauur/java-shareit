@@ -21,18 +21,12 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        if (!service.checkUser(user)) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }
         return new ResponseEntity<>(service.saveUser(user), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable long id, @RequestBody User user) {
         user.setId(id);
-        if (!service.checkUser(user)) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }
         return service.updateUser(user).map(updatedUser -> new ResponseEntity<>(updatedUser, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

@@ -13,6 +13,4 @@ public interface UserService {
     boolean deleteUser(long id);
 
     Optional<User> getUser(long id);
-
-    boolean checkUser(User user);
 }
