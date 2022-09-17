@@ -26,8 +26,8 @@ public class ItemMapper {
 
     public static Item toItem(ItemDto itemDto, Item itemOld) {
         Item item = itemOld;
-        item.setName(itemDto.getName().isEmpty() ? itemOld.getName() : itemDto.getName());
-        item.setDescription(itemDto.getDescription().isEmpty() ? itemOld.getDescription() : itemDto.getDescription());
+        item.setName(itemDto.getName() == null ? itemOld.getName() : itemDto.getName());
+        item.setDescription(itemDto.getDescription() == null ? itemOld.getDescription() : itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable() == null ? itemOld.getAvailable() : itemDto.getAvailable());
         return item;
     }

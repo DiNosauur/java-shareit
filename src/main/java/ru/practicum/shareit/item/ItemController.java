@@ -16,7 +16,7 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public Collection<Item> findItemItems(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public Collection<Item> findUserItems(@RequestHeader("X-Sharer-User-Id") long userId) {
         return service.findUserItems(userId);
     }
 

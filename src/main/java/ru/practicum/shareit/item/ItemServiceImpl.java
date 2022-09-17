@@ -8,6 +8,8 @@ import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -20,7 +22,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<Item> findUserItems(long userId) {
-        return repository.findByUserId(userId);
+        return repository.findByOwner(userId);
     }
 
     private void validateUser(long userId) {
@@ -81,6 +83,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<Item> searchItems(String text) {
-        return repository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(text);
+        return text == null || text.isBlank() ? new ArrayList<>() : repository.search(text);
     }
 }
