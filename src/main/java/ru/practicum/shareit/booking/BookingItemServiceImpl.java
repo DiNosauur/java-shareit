@@ -151,6 +151,22 @@ public class BookingItemServiceImpl implements BookingService {
     }
 
     @Override
+    public Collection<BookingFullDto> findOwnerBookings(long ownerId, String state) {
+        validateUser(ownerId);
+        try {
+            BookingState bookingState = BookingState.valueOf(state);
+        } catch (Exception e) {
+            throw new ValidationException(String.format("Unknown state: %s", state));
+        }
+        return repository.findAllByOwnerId(ownerId, state, LocalDateTime.now())
+                .stream()
+                .map(booking -> BookingMapper.toBookingFullDto(booking,
+                        userRepository.findById(booking.getBookerId()).get(),
+                        itemRepository.findById(booking.getItemId()).get()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<BookingFullDto> getBooking(long id, long userId) {
         Booking booking = validateBooking(id, userId, userId);
         Item item = validateItem(BookingMapper.toBookingDto(booking), null);

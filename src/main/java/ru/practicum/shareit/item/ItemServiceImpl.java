@@ -3,15 +3,19 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,10 +23,16 @@ import java.util.Optional;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository repository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
-    public Collection<Item> findUserItems(long userId) {
-        return repository.findByOwner(userId);
+    public Collection<ItemBookingDto> findUserItems(long userId) {
+        return repository.findByOwner(userId)
+                .stream()
+                .map(item -> ItemMapper.toItemBookingDto(item,
+                        bookingRepository.findByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(item.getId(), userId, LocalDateTime.now()),
+                        bookingRepository.findByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(item.getId(), userId, LocalDateTime.now())))
+                .collect(Collectors.toList());
     }
 
     private void validateUser(long userId) {
@@ -32,7 +42,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Optional<Item> validateUserItem(long itemId, long userId) {
-        Optional<Item> item = getItem(itemId);
+        Optional<Item> item = repository.findById(itemId);
         if (!item.isPresent()) {
             throw new NotFoundException(String.format("Вещь (id = %s) не найдена", itemId));
         } else if (!item.get().getOwner().equals(userId)) {
@@ -67,7 +77,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public boolean deleteItem(long id, long userId) {
         validateUser(userId);
-        Optional<Item> item = getItem(id);
+        Optional<Item> item = repository.findById(id);
         if (item.isPresent()) {
             repository.deleteById(id);
             return true;
@@ -77,8 +87,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Optional<Item> getItem(long id) {
-        return repository.findById(id);
+    public Optional<ItemBookingDto> getItem(long id, long userId) {
+        Optional<Item> item = repository.findById(id);
+        if (item.isPresent()) {
+            return Optional.of(ItemMapper.toItemBookingDto(item.get(),
+                    bookingRepository.findByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(id, userId, LocalDateTime.now()),
+                    bookingRepository.findByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(id, userId, LocalDateTime.now())));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override

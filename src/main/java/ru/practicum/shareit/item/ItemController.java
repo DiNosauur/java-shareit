@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import javax.validation.Valid;
@@ -16,7 +17,7 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public Collection<Item> findUserItems(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public Collection<ItemBookingDto> findUserItems(@RequestHeader("X-Sharer-User-Id") long userId) {
         return service.findUserItems(userId);
     }
 
@@ -35,8 +36,9 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Item> findItemById(@PathVariable long id) {
-        return service.getItem(id).map(item -> new ResponseEntity<>(item, HttpStatus.OK))
+    public ResponseEntity<ItemBookingDto> findItemById(@PathVariable long id,
+                                                       @RequestHeader("X-Sharer-User-Id") long userId) {
+        return service.getItem(id, userId).map(item -> new ResponseEntity<>(item, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

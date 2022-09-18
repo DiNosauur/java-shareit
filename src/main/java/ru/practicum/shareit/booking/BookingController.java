@@ -16,12 +16,6 @@ import java.util.Collection;
 public class BookingController {
     private final BookingService service;
 
-    @GetMapping
-    public Collection<BookingFullDto> findUserBookings(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                @RequestParam(defaultValue = "ALL") String state) {
-        return service.findUserBookings(userId, state);
-    }
-
     @PostMapping
     public ResponseEntity<BookingFullDto> createBooking(@Valid @RequestBody BookingDto bookingDto,
                                                         @RequestHeader("X-Sharer-User-Id") long userId) {
@@ -38,8 +32,20 @@ public class BookingController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookingFullDto> findBookingById(@PathVariable long id,
-                                                   @RequestHeader("X-Sharer-User-Id") long userId) {
+                                                          @RequestHeader("X-Sharer-User-Id") long userId) {
         return service.getBooking(id, userId).map(booking -> new ResponseEntity<>(booking, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping
+    public Collection<BookingFullDto> findUserBookings(@RequestHeader("X-Sharer-User-Id") long userId,
+                                                       @RequestParam(defaultValue = "ALL") String state) {
+        return service.findUserBookings(userId, state);
+    }
+
+    @GetMapping("/owner")
+    public Collection<BookingFullDto> findOwnerBookings(@RequestHeader("X-Sharer-User-Id") long userId,
+                                                        @RequestParam(defaultValue = "ALL") String state) {
+        return service.findOwnerBookings(userId, state);
     }
 }
