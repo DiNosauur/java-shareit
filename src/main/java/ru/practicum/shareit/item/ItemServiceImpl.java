@@ -3,12 +3,17 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.item.dto.ItemBookingDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemFullDto;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
@@ -24,21 +29,28 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository repository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Override
-    public Collection<ItemBookingDto> findUserItems(long userId) {
+    public Collection<ItemFullDto> findUserItems(long userId) {
         return repository.findByOwner(userId)
                 .stream()
-                .map(item -> ItemMapper.toItemBookingDto(item,
-                        bookingRepository.findByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(item.getId(), userId, LocalDateTime.now()),
-                        bookingRepository.findByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(item.getId(), userId, LocalDateTime.now())))
+                .map(item -> ItemMapper.toItemFullDto(item,
+                        bookingRepository.findFirstByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(item.getId(), userId, LocalDateTime.now()),
+                        bookingRepository.findFirstByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(item.getId(), userId, LocalDateTime.now()),
+                        commentRepository.findAllByItemIdOrderByCreatedDesc(item.getId())
+                                .stream()
+                                .map(comment -> CommentMapper.toCommentDto(comment, validateUser(comment.getAuthorId()).getName()))
+                                .collect(Collectors.toList())))
                 .collect(Collectors.toList());
     }
 
-    private void validateUser(long userId) {
-        if (!userRepository.findById(userId).isPresent()) {
+    private User validateUser(long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (!user.isPresent()) {
             throw new NotFoundException(String.format("Пользователь (id = %s) не найден", userId));
         }
+        return user.get();
     }
 
     private Optional<Item> validateUserItem(long itemId, long userId) {
@@ -50,6 +62,17 @@ public class ItemServiceImpl implements ItemService {
                     "Вещь (id = %s) не найдена у пользователя (id = %s)", itemId, userId));
         }
         return item;
+    }
+
+    private boolean validateBookingItem(long itemId, long userId) {
+        Optional<Booking> booking = bookingRepository.findByItemIdAndBookerIdAndStatusAndEndBefore(
+                itemId, userId, BookingStatus.APPROVED, LocalDateTime.now());
+        if (booking.isPresent()) {
+            return true;
+        } else {
+            throw new ValidationException(String.format(
+                    "Пользователь (id = %s) не брал вещь (id = %s) в аренду", userId, itemId));
+        }
     }
 
     @Transactional
@@ -87,12 +110,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Optional<ItemBookingDto> getItem(long id, long userId) {
+    public Optional<ItemFullDto> getItem(long id, long userId) {
         Optional<Item> item = repository.findById(id);
         if (item.isPresent()) {
-            return Optional.of(ItemMapper.toItemBookingDto(item.get(),
-                    bookingRepository.findByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(id, userId, LocalDateTime.now()),
-                    bookingRepository.findByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(id, userId, LocalDateTime.now())));
+            return Optional.of(ItemMapper.toItemFullDto(item.get(),
+                    bookingRepository.findFirstByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(id, userId, LocalDateTime.now()),
+                    bookingRepository.findFirstByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(id, userId, LocalDateTime.now()),
+                    commentRepository.findAllByItemIdOrderByCreatedDesc(id)
+                            .stream()
+                            .map(comment -> CommentMapper.toCommentDto(comment, validateUser(comment.getAuthorId()).getName()))
+                            .collect(Collectors.toList())));
         } else {
             return Optional.empty();
         }
@@ -101,5 +128,16 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<Item> searchItems(String text) {
         return text == null || text.isBlank() ? new ArrayList<>() : repository.search(text);
+    }
+
+    @Override
+    public Optional<CommentDto> addItemComment(long itemId, long userId, CommentDto commentDto) {
+        User user = validateUser(userId);
+        if (validateBookingItem(itemId, userId)) {
+            Comment comment = commentRepository.save(CommentMapper.toComment(commentDto, itemId, userId));
+            return Optional.of(CommentMapper.toCommentDto(comment, user.getName()));
+        } else {
+            return Optional.empty();
+        }
     }
 }

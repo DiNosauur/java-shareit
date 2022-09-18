@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemBookingDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemFullDto;
 import ru.practicum.shareit.item.model.Item;
+
 import javax.validation.Valid;
 import java.util.Collection;
 
@@ -17,7 +19,7 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public Collection<ItemBookingDto> findUserItems(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public Collection<ItemFullDto> findUserItems(@RequestHeader("X-Sharer-User-Id") long userId) {
         return service.findUserItems(userId);
     }
 
@@ -36,8 +38,8 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ItemBookingDto> findItemById(@PathVariable long id,
-                                                       @RequestHeader("X-Sharer-User-Id") long userId) {
+    public ResponseEntity<ItemFullDto> findItemById(@PathVariable long id,
+                                                    @RequestHeader("X-Sharer-User-Id") long userId) {
         return service.getItem(id, userId).map(item -> new ResponseEntity<>(item, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -52,5 +54,13 @@ public class ItemController {
     @GetMapping("/search")
     public Collection<Item> searchItems(@RequestParam(required = false) String text) {
         return service.searchItems(text);
+    }
+
+    @PostMapping("/{id}/comment")
+    public ResponseEntity<CommentDto> addItemComment(@PathVariable long id,
+                                                     @Valid @RequestBody CommentDto commentDto,
+                                                     @RequestHeader("X-Sharer-User-Id") long userId) {
+        return service.addItemComment(id, userId, commentDto).map(comment -> new ResponseEntity<>(comment, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }

@@ -3,8 +3,6 @@ package ru.practicum.shareit.booking;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.web.bind.annotation.RequestHeader;
-import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -37,7 +35,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             " order by b.start desc")
     Collection<Booking> findAllByOwnerId(long ownerId, String state, LocalDateTime localDateTime);
 
-    Optional<Booking> findByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(long itemId, long userId, LocalDateTime now);
+    Optional<Booking> findFirstByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(long itemId, long userId, LocalDateTime now);
 
-    Optional<Booking> findByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(long itemId, long userId, LocalDateTime now);
+    Optional<Booking> findFirstByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(long itemId, long userId, LocalDateTime now);
+
+    Optional<Booking> findByItemIdAndBookerIdAndStatusAndEndBefore(long itemId, long userId, BookingStatus status, LocalDateTime now);
 }

@@ -1,10 +1,13 @@
 package ru.practicum.shareit.item;
 
 import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.item.dto.ItemBookingDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemFullDto;
 import ru.practicum.shareit.item.model.Item;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 
 public class ItemMapper {
@@ -36,20 +39,28 @@ public class ItemMapper {
         return item;
     }
 
-    public static ItemBookingDto toItemBookingDto(Item item, Optional<Booking> lastBooking, Optional<Booking> nextBooking) {
-        ItemBookingDto itemBookingDto = new ItemBookingDto();
+    public static ItemFullDto toItemFullDto(Item item,
+                                            Optional<Booking> lastBooking,
+                                            Optional<Booking> nextBooking,
+                                            Collection<CommentDto> comments) {
+        ItemFullDto itemFullDto = new ItemFullDto();
         if (item != null) {
-            itemBookingDto.setId(item.getId());
-            itemBookingDto.setName(item.getName());
-            itemBookingDto.setDescription(item.getDescription());
-            itemBookingDto.setAvailable(item.getAvailable());
+            itemFullDto.setId(item.getId());
+            itemFullDto.setName(item.getName());
+            itemFullDto.setDescription(item.getDescription());
+            itemFullDto.setAvailable(item.getAvailable());
             if (lastBooking.isPresent()) {
-                itemBookingDto.setLastBooking(lastBooking.get());
+                itemFullDto.setLastBooking(lastBooking.get());
             }
             if (nextBooking.isPresent()) {
-                itemBookingDto.setNextBooking(nextBooking.get());
+                itemFullDto.setNextBooking(nextBooking.get());
+            }
+            if (comments != null && comments.size() > 0) {
+                itemFullDto.setComments(comments);
+            } else {
+                itemFullDto.setComments(new ArrayList<>());
             }
         }
-        return itemBookingDto;
+        return itemFullDto;
     }
 }
