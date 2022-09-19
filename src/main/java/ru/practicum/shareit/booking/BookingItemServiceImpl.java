@@ -40,7 +40,7 @@ public class BookingItemServiceImpl implements BookingService {
             throw new NotFoundException(String.format("Вещь (id = %s) не найдена", bookingDto.getItemId()));
         } else if (!item.get().getAvailable()) {
             throw new ValidationException(String.format("Вещь (id = %s) не доступна", bookingDto.getItemId()));
-        } else if (bookerId != null && item.get().getOwner() == bookerId) {
+        } else if (bookerId != null && item.get().getOwner().equals(bookerId)) {
             throw new NotFoundException(String.format("Нельзя забронировать вещь (id = %s), являясь её владельцем",
                     bookingDto.getItemId()));
         } else if (repository.findByItemIdAndStatusAndStartBeforeAndEndAfter(
@@ -56,14 +56,16 @@ public class BookingItemServiceImpl implements BookingService {
             throw new NotFoundException(String.format("<Бронь (id = %s) не найдена", bookingId));
         } else {
             Item item = itemRepository.findById(booking.get().getItemId()).get();
-            if (bookerId == null && item.getOwner() != ownerId) {
+            if (bookerId == null && !item.getOwner().equals(ownerId)) {
                 throw new NotFoundException(String.format(
                         "Пользователь (id = %s) не является владельцем вещи (id = %s)", ownerId, booking.get().getItemId()));
-            } else if (ownerId == null && booking.get().getBookerId() != bookerId) {
+            } else if (ownerId == null && !booking.get().getBookerId().equals(bookerId)) {
                 throw new NotFoundException(String.format(
                         "Пользователь (id = %s) не является автором бронирования вещи (id = %s)",
                         bookerId, booking.get().getItemId()));
-            } else if (bookerId != null && ownerId != null && booking.get().getBookerId() != bookerId && item.getOwner() != ownerId) {
+            } else if (bookerId != null && ownerId != null
+                    && !booking.get().getBookerId().equals(bookerId)
+                    && !item.getOwner().equals(ownerId)) {
                 throw new NotFoundException(String.format(
                         "Пользователь (id = %s) не является ни автором бронирования, ни владельцем вещи (id = %s)",
                         bookerId, booking.get().getItemId()));
