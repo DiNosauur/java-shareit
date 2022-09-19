@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -22,6 +23,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -33,11 +35,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemFullDto> findUserItems(long userId) {
+        log.info(String.format("Поиск всех вещей пользователя (id=%s)", userId));
         return repository.findByOwner(userId)
                 .stream()
                 .map(item -> ItemMapper.toItemFullDto(item,
-                        bookingRepository.findFirstByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(item.getId(), userId, LocalDateTime.now()),
-                        bookingRepository.findFirstByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(item.getId(), userId, LocalDateTime.now()),
+                        bookingRepository.findLastBooking(item.getId(), userId, LocalDateTime.now()),
+                        bookingRepository.findNextBooking(item.getId(), userId, LocalDateTime.now()),
                         commentRepository.findAllByItemIdOrderByCreatedDesc(item.getId())
                                 .stream()
                                 .map(comment -> CommentMapper.toCommentDto(comment, validateUser(comment.getAuthorId()).getName()))
@@ -78,6 +81,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public Item saveItem(ItemDto itemDto, long userId) {
+        log.info(String.format("Добавление вещи (%s) пользователем (id=%s)", itemDto.toString(), userId));
         validateUser(userId);
         if (itemDto.getAvailable() == null) {
             throw new ValidationException("Не передан статус вещи");
@@ -89,6 +93,8 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public Optional<Item> updateItem(long itemId, ItemDto itemDto, long userId) {
+        log.info(String.format("Редактирование информации (%s) о вещи (id=%s) пользователем (id=%s)",
+                itemDto.toString(), itemId, userId));
         validateUser(userId);
         Optional<Item> itemOld = validateUserItem(itemId, userId);
         Item item = ItemMapper.toItem(itemDto, itemOld.get());
@@ -99,6 +105,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public boolean deleteItem(long id, long userId) {
+        log.info(String.format("Удаление вещи (id=%s) пользователем (id=%s)", id, userId));
         validateUser(userId);
         Optional<Item> item = repository.findById(id);
         if (item.isPresent()) {
@@ -111,11 +118,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Optional<ItemFullDto> getItem(long id, long userId) {
+        log.info(String.format("Получение информации о вещи (id=%s) пользователем (id=%s)", id, userId));
         Optional<Item> item = repository.findById(id);
         if (item.isPresent()) {
             return Optional.of(ItemMapper.toItemFullDto(item.get(),
-                    bookingRepository.findFirstByItemIdAndBookerIdNotAndStartBeforeOrderByStartDesc(id, userId, LocalDateTime.now()),
-                    bookingRepository.findFirstByItemIdAndBookerIdNotAndStartAfterOrderByStartAsc(id, userId, LocalDateTime.now()),
+                    bookingRepository.findLastBooking(id, userId, LocalDateTime.now()),
+                    bookingRepository.findNextBooking(id, userId, LocalDateTime.now()),
                     commentRepository.findAllByItemIdOrderByCreatedDesc(id)
                             .stream()
                             .map(comment -> CommentMapper.toCommentDto(comment, validateUser(comment.getAuthorId()).getName()))
@@ -127,11 +135,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<Item> searchItems(String text) {
+        log.info(String.format("Поиск вещи по строке (%s)", text));
         return text == null || text.isBlank() ? new ArrayList<>() : repository.search(text);
     }
 
     @Override
     public Optional<CommentDto> addItemComment(long itemId, long userId, CommentDto commentDto) {
+        log.info(String.format("Добавление комментария (%s) о вещи (id=%s) пользователем (id=%s)",
+                commentDto.getText(), itemId, userId));
         User user = validateUser(userId);
         if (validateBookingItem(itemId, userId)) {
             Comment comment = commentRepository.save(CommentMapper.toComment(commentDto, itemId, userId));

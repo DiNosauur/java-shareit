@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.ConflictException;
@@ -8,6 +9,7 @@ import ru.practicum.shareit.exception.ConflictException;
 import java.util.Collection;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -29,12 +31,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User saveUser(User user) {
+        log.info(String.format("Добавление пользователя (%s)", user.toString()));
         return repository.save(user);
     }
 
     @Transactional
     @Override
     public Optional<User> updateUser(User user) {
+        log.info(String.format("Редактирование пользователя (%s)", user.toString()));
         validate(user);
         Optional<User> changeableUser = getUser(user.getId());
         if (changeableUser.isPresent()) {
@@ -52,6 +56,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public boolean deleteUser(long id) {
+        log.info(String.format("Удаление пользователя (id=%s)", id));
         Optional<User> user = getUser(id);
         if (user.isPresent()) {
             repository.deleteById(id);

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -88,6 +90,8 @@ public class BookingItemServiceImpl implements BookingService {
     @Transactional
     @Override
     public BookingFullDto saveBooking(BookingDto bookingDto, Long bookerId) {
+        log.info(String.format("Заявка на бронирование (%s) от пользователя (id=%s)",
+                bookingDto.toString(), bookerId));
         validateBooking(bookingDto);
         User booker = validateUser(bookerId);
         Item item = validateItem(bookingDto, bookerId);
@@ -98,6 +102,8 @@ public class BookingItemServiceImpl implements BookingService {
     @Transactional
     @Override
     public Optional<BookingFullDto> updateBooking(Long id, Long ownerId, Boolean approved) {
+        log.info(String.format("Изменение статуса брони (id=%s) от пользователя (id=%s) на %s",
+                id, ownerId, approved ? BookingStatus.APPROVED : BookingStatus.REJECTED));
         validateUser(ownerId);
         Booking booking = validateBooking(id, ownerId, null);
         if (booking.getStatus() != BookingStatus.WAITING) {
@@ -111,6 +117,7 @@ public class BookingItemServiceImpl implements BookingService {
 
     @Override
     public Collection<BookingFullDto> findUserBookings(long bookerId, String state) {
+        log.info(String.format("Поиск бронирований от пользователя (id=%s) для state = %s", bookerId, state));
         User booker = validateUser(bookerId);
         if (state.equals(BookingState.ALL.name())) {
             return repository.findAllByBookerId(bookerId, Sort.by(Sort.Direction.DESC, "start"))
@@ -154,6 +161,7 @@ public class BookingItemServiceImpl implements BookingService {
 
     @Override
     public Collection<BookingFullDto> findOwnerBookings(long ownerId, String state) {
+        log.info(String.format("Поиск бронирований вещей пользователя (id=%s) для state = %s", ownerId, state));
         validateUser(ownerId);
         try {
             BookingState bookingState = BookingState.valueOf(state);
@@ -170,6 +178,7 @@ public class BookingItemServiceImpl implements BookingService {
 
     @Override
     public Optional<BookingFullDto> getBooking(long id, long userId) {
+        log.info(String.format("Запрос брони (id=%s) от пользователя (id=%s)", id, userId));
         Booking booking = validateBooking(id, userId, userId);
         Item item = validateItem(BookingMapper.toBookingDto(booking), null);
         User booker = validateUser(booking.getBookerId());
