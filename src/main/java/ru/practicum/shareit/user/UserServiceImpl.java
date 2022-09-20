@@ -31,14 +31,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User saveUser(User user) {
-        log.info(String.format("Добавление пользователя (%s)", user.toString()));
+        log.info("Добавление пользователя {}", user.toString());
         return repository.save(user);
     }
 
     @Transactional
     @Override
     public Optional<User> updateUser(User user) {
-        log.info(String.format("Редактирование пользователя (%s)", user.toString()));
+        log.info("Редактирование пользователя {}", user.toString());
         validate(user);
         Optional<User> changeableUser = getUser(user.getId());
         if (changeableUser.isPresent()) {
@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public boolean deleteUser(long id) {
-        log.info(String.format("Удаление пользователя (id=%s)", id));
+        log.info("Удаление пользователя (id={})", id);
         Optional<User> user = getUser(id);
         if (user.isPresent()) {
             repository.deleteById(id);

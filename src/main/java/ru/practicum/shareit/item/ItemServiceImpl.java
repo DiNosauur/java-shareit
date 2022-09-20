@@ -35,7 +35,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemFullDto> findUserItems(long userId) {
-        log.info(String.format("Поиск всех вещей пользователя (id=%s)", userId));
+        log.info("Поиск всех вещей пользователя (id={})", userId);
         return repository.findByOwner(userId)
                 .stream()
                 .map(item -> ItemMapper.toItemFullDto(item,
@@ -81,7 +81,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public Item saveItem(ItemDto itemDto, long userId) {
-        log.info(String.format("Добавление вещи (%s) пользователем (id=%s)", itemDto.toString(), userId));
+        log.info("Добавление вещи {} пользователем (id={})", itemDto.toString(), userId);
         validateUser(userId);
         if (itemDto.getAvailable() == null) {
             throw new ValidationException("Не передан статус вещи");
@@ -93,8 +93,8 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public Optional<Item> updateItem(long itemId, ItemDto itemDto, long userId) {
-        log.info(String.format("Редактирование информации (%s) о вещи (id=%s) пользователем (id=%s)",
-                itemDto.toString(), itemId, userId));
+        log.info("Редактирование информации {} о вещи (id={}) пользователем (id={})",
+                itemDto.toString(), itemId, userId);
         validateUser(userId);
         Optional<Item> itemOld = validateUserItem(itemId, userId);
         Item item = ItemMapper.toItem(itemDto, itemOld.get());
@@ -105,7 +105,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public boolean deleteItem(long id, long userId) {
-        log.info(String.format("Удаление вещи (id=%s) пользователем (id=%s)", id, userId));
+        log.info("Удаление вещи (id={}) пользователем (id={})", id, userId);
         validateUser(userId);
         Optional<Item> item = repository.findById(id);
         if (item.isPresent()) {
@@ -118,7 +118,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Optional<ItemFullDto> getItem(long id, long userId) {
-        log.info(String.format("Получение информации о вещи (id=%s) пользователем (id=%s)", id, userId));
+        log.info("Получение информации о вещи (id={}) пользователем (id={})", id, userId);
         Optional<Item> item = repository.findById(id);
         if (item.isPresent()) {
             return Optional.of(ItemMapper.toItemFullDto(item.get(),
@@ -135,14 +135,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<Item> searchItems(String text) {
-        log.info(String.format("Поиск вещи по строке (%s)", text));
+        log.info("Поиск вещи по строке ({})", text);
         return text == null || text.isBlank() ? new ArrayList<>() : repository.search(text);
     }
 
     @Override
     public Optional<CommentDto> addItemComment(long itemId, long userId, CommentDto commentDto) {
-        log.info(String.format("Добавление комментария (%s) о вещи (id=%s) пользователем (id=%s)",
-                commentDto.getText(), itemId, userId));
+        log.info("Добавление комментария ({}) о вещи (id={}) пользователем (id={})",
+                commentDto.getText(), itemId, userId);
         User user = validateUser(userId);
         if (validateBookingItem(itemId, userId)) {
             Comment comment = commentRepository.save(CommentMapper.toComment(commentDto, itemId, userId));
