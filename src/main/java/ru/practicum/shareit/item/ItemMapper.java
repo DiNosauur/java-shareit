@@ -16,18 +16,19 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getAvailable()
+                item.getAvailable(),
+                item.getRequestId()
         );
     }
 
-    public static Item toItem(ItemDto itemDto, Long ownerId, Long requestId) {
+    public static Item toItem(ItemDto itemDto, Long ownerId) {
         Item item = new Item();
         item.setId(itemDto.getId());
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
         item.setOwner(ownerId);
-        item.setItemRequest(requestId);
+        item.setRequestId(itemDto.getRequestId());
         return item;
     }
 
@@ -49,6 +50,7 @@ public class ItemMapper {
             itemFullDto.setName(item.getName());
             itemFullDto.setDescription(item.getDescription());
             itemFullDto.setAvailable(item.getAvailable());
+            itemFullDto.setRequestId(item.getRequestId());
             if (lastBooking.isPresent()) {
                 itemFullDto.setLastBooking(lastBooking.get());
             }
