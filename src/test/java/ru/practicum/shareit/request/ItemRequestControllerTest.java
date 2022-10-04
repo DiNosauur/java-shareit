@@ -38,7 +38,7 @@ class ItemRequestControllerTest {
     @Autowired
     private MockMvc mvc;
 
-    private ItemRequestDto itemRequestDto = new ItemRequestDto(1l, "Нужна 4-местная байдарка");
+    private ItemRequestDto itemRequestDto = new ItemRequestDto(1L, "Нужна 4-местная байдарка");
 
     private ItemRequest itemRequest = new ItemRequest();
 
