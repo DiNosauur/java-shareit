@@ -62,7 +62,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public Collection<ItemRequestFullDto> findAllItemRequests(long userId, int from, int size) {
-        log.info("Поиск всех запросов пользователя (id={})", userId);
+        log.info("Поиск всех запросов не от пользователя (id={})", userId);
         validateUser(userId);
         int page = validatePage(from, size);
         return repository.findByRequestorNotOrderByCreatedDesc(userId, PageRequest.of(page, size))
