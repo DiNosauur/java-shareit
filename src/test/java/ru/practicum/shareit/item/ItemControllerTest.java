@@ -46,7 +46,7 @@ class ItemControllerTest {
 
     private LocalDateTime commentCreated = end.plusDays(1);
 
-    private ItemDto itemDto = new ItemDto(1l, "Дрель", "Инструмент для сверления", true, 2l);
+    private ItemDto itemDto = new ItemDto(1L, "Дрель", "Инструмент для сверления", true, 2L);
 
     private Item item = new Item();
 
