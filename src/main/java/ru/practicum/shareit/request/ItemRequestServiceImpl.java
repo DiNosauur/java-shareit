@@ -43,12 +43,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             throw new ValidationException(String.format("Параметр from (%s) задан некорректно", from));
         }
 
-        try {
-            int page = from / size;
-            return page;
-        } catch (Exception e) {
-            throw new ValidationException(String.format("Параметры from (%s) и/или size (%s) заданы некорректно", from, size));
-        }
+        int page = from / size;
+
+        return page;
     }
 
     @Transactional
