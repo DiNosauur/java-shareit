@@ -294,7 +294,7 @@ class ItemServiceImplTest {
 
         ValidationException validationException = Assertions.assertThrows(
                 ValidationException.class,
-                () -> itemService.addItemComment(2L,1L, commentDto));
+                () -> itemService.addItemComment(2L, 1L, commentDto));
 
         Assertions.assertEquals("Пользователь (id = 1) не брал вещь (id = 2) в аренду", validationException.getMessage());
 
@@ -303,7 +303,7 @@ class ItemServiceImplTest {
                         Mockito.anyLong(), Mockito.anyLong(), Mockito.any(), Mockito.any()))
                 .thenReturn(Optional.of(booking));
 
-        Assertions.assertEquals(true, itemService.addItemComment(1L,1L, commentDto).isPresent());
+        Assertions.assertEquals(true, itemService.addItemComment(1L, 1L, commentDto).isPresent());
     }
 
     private Item makeItem(long userId, String name, String desc) {
