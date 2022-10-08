@@ -270,7 +270,7 @@ class ItemServiceImplTest {
         Booking booking = makeBooking(user.getId(), item.getId(), now.minusDays(14), now.minusDays(11), BookingStatus.APPROVED);
         booking.setId(1L);
 
-        CommentDto commentDto = new CommentDto(1l, "спининг", "Dmitriy", now);
+        CommentDto commentDto = new CommentDto(1L, "спининг", "Dmitriy", now);
 
         Comment comment = CommentMapper.toComment(commentDto, user.getId(), item.getId());
         comment.setId(1L);

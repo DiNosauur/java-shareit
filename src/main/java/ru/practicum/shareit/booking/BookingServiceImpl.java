@@ -56,7 +56,7 @@ public class BookingServiceImpl implements BookingService {
     private Booking validateBooking(Long bookingId, Long ownerId, Long bookerId) {
         Optional<Booking> booking = repository.findById(bookingId);
         if (!booking.isPresent()) {
-            throw new NotFoundException(String.format("<Бронь (id = %s) не найдена", bookingId));
+            throw new NotFoundException(String.format("Бронь (id = %s) не найдена", bookingId));
         } else {
             Item item = itemRepository.findById(booking.get().getItemId()).get();
             if (bookerId == null && !item.getOwner().equals(ownerId)) {

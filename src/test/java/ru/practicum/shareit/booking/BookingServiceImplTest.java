@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingFullDto;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -99,10 +100,38 @@ class BookingServiceImplTest {
 
         LocalDateTime now = LocalDateTime.now();
 
-        Booking booking = makeBooking(user.getId(), item.getId(), now.plusDays(1), now.plusDays(11), BookingStatus.APPROVED);
+        Booking booking = makeBooking(user.getId(), item.getId(), now.plusDays(5), now.plusDays(10), BookingStatus.APPROVED);
         booking.setId(1L);
 
-        BookingDto bookingDto = new BookingDto(item.getId(), now.plusDays(1), now.plusDays(5));
+        BookingDto bookingDto = new BookingDto(item.getId(), now.minusDays(10), now.minusDays(5));
+
+        ValidationException validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.saveBooking(bookingDto, 1L));
+
+        Assertions.assertEquals(String.format("Дата начала брони (%s) находится в прошлом", bookingDto.getStart()),
+                validationException.getMessage());
+
+        bookingDto.setStart(now.plusDays(5));
+
+        validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.saveBooking(bookingDto, 1L));
+
+        Assertions.assertEquals(String.format("Дата окончания брони (%s) находится в прошлом", bookingDto.getEnd()),
+                validationException.getMessage());
+
+        bookingDto.setEnd(now.plusDays(1));
+
+        validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.saveBooking(bookingDto, 1L));
+
+        Assertions.assertEquals(String.format("Дата окончания брони (%s) раньше даты начала (%s)",
+                bookingDto.getEnd(), bookingDto.getStart()),
+                validationException.getMessage());
+
+        bookingDto.setEnd(now.plusDays(10));
 
         Mockito
                 .when(mockUserRepository.findById(1L))
@@ -128,7 +157,7 @@ class BookingServiceImplTest {
                 .when(mockItemRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(item));
 
-        ValidationException validationException = Assertions.assertThrows(
+        validationException = Assertions.assertThrows(
                 ValidationException.class,
                 () -> bookingService.saveBooking(bookingDto, 1L));
 
@@ -155,18 +184,202 @@ class BookingServiceImplTest {
 
         Assertions.assertEquals("Вещь (id = 1) уже забронирована на эти даты", validationException.getMessage());
 
-        }
+        Mockito
+                .when(mockBookingRepository.findByItemIdAndStatusAndStartBeforeAndEndAfter(
+                        Mockito.anyLong(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(List.of());
+
+        Mockito
+                .when(mockBookingRepository.save(Mockito.any()))
+                .thenReturn(booking);
+
+        BookingFullDto bookingFullDto = bookingService.saveBooking(bookingDto, 1L);
+        Assertions.assertEquals(booking.getItemId(), bookingFullDto.getItem().getId());
+    }
 
     @Test
     void updateBooking() {
+        BookingRepository mockBookingRepository = Mockito.mock(BookingRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        BookingServiceImpl bookingService =
+                new BookingServiceImpl(mockBookingRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Item item = makeItem(user.getId(), "удочка", "инструмент для ловли рыбы");
+        item.setId(1L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Booking booking = makeBooking(2L, item.getId(), now.plusDays(5), now.plusDays(10), BookingStatus.APPROVED);
+        booking.setId(1L);
+
+        BookingDto bookingDto = new BookingDto(item.getId(), now.plusDays(5), now.plusDays(10));
+
+        Mockito
+                .when(mockUserRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(user));
+
+        Mockito
+                .when(mockItemRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(item));
+
+        Mockito
+                .when(mockBookingRepository.findById(1L))
+                .thenReturn(Optional.of(booking));
+
+        NotFoundException notFoundException = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> bookingService.updateBooking(2L, 1L, true));
+
+        Assertions.assertEquals("Бронь (id = 2) не найдена", notFoundException.getMessage());
+
+        notFoundException = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> bookingService.updateBooking(1L, 2L, true));
+
+        Assertions.assertEquals("Пользователь (id = 2) не является владельцем вещи (id = 1)", notFoundException.getMessage());
+
+        ValidationException validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.updateBooking(1L, 1L, true));
+
+        Assertions.assertEquals(String.format("Статус брони отличен от %s", BookingStatus.WAITING),
+                validationException.getMessage());
+
+        booking.setStatus(BookingStatus.WAITING);
+
+        Mockito
+                .when(mockBookingRepository.save(Mockito.any()))
+                .thenReturn(booking);
+
+        BookingFullDto bookingFullDto = bookingService.updateBooking(1L, 1L, true).get();
+        Assertions.assertEquals(booking.getStatus(), bookingFullDto.getStatus());
     }
 
     @Test
     void findOwnerBookings() {
+        BookingRepository mockBookingRepository = Mockito.mock(BookingRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        BookingServiceImpl bookingService =
+                new BookingServiceImpl(mockBookingRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Item item = makeItem(user.getId(), "удочка", "инструмент для ловли рыбы");
+        item.setId(1L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Booking booking = makeBooking(2L, item.getId(), now.plusDays(5), now.plusDays(10), BookingStatus.APPROVED);
+        booking.setId(1L);
+
+        Mockito
+                .when(mockUserRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(user));
+
+        Mockito
+                .when(mockItemRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(item));
+
+        Mockito
+                .when(mockBookingRepository.findById(1L))
+                .thenReturn(Optional.of(booking));
+
+        ValidationException validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.findOwnerBookings(1L, "LAST", 0, 20));
+
+        Assertions.assertEquals("Unknown state: LAST", validationException.getMessage());
+
+        validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.findOwnerBookings(1L, "ALL", -1, 20));
+
+        Assertions.assertEquals("Параметр from (-1) задан некорректно", validationException.getMessage());
+
+        validationException = Assertions.assertThrows(
+                ValidationException.class,
+                () -> bookingService.findOwnerBookings(1L, "ALL", 0, 0));
+
+        Assertions.assertEquals("Параметр size (0) задан некорректно", validationException.getMessage());
+
+        List<Booking> sourceBookings = List.of(
+                makeBooking(1L, item.getId(), now.plusDays(1), now.plusDays(2), BookingStatus.APPROVED),
+                makeBooking(1L, item.getId(), now.plusDays(3), now.plusDays(4), BookingStatus.REJECTED),
+                makeBooking(1L, item.getId(), now.plusDays(5), now.plusDays(6), BookingStatus.WAITING)
+        );
+        long id = 2;
+        for (Booking sourceBooking : sourceBookings) {
+            sourceBooking.setId(id++);
+        }
+
+        Mockito
+                .when(mockBookingRepository.findAllByOwnerId(
+                        Mockito.anyLong(), Mockito.anyString(), Mockito.any(), Mockito.any()))
+                .thenReturn(new PageImpl<>(sourceBookings));
+
+        Collection<BookingFullDto> targetBookings =
+                bookingService.findOwnerBookings(1L, "ALL", 0, 20);
+
+        assertThat(targetBookings, hasSize(sourceBookings.size()));
+        for (Booking sourceBooking : sourceBookings) {
+            assertThat(targetBookings, hasItem(allOf(
+                    hasProperty("id", notNullValue()),
+                    hasProperty("status", equalTo(sourceBooking.getStatus()))
+            )));
+        }
     }
 
     @Test
     void getBooking() {
+        BookingRepository mockBookingRepository = Mockito.mock(BookingRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        BookingServiceImpl bookingService =
+                new BookingServiceImpl(mockBookingRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Item item = makeItem(user.getId(), "удочка", "инструмент для ловли рыбы");
+        item.setId(1L);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Booking booking = makeBooking(2L, item.getId(), now.plusDays(5), now.plusDays(10), BookingStatus.APPROVED);
+        booking.setId(1L);
+
+        Mockito
+                .when(mockUserRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(user));
+
+        Mockito
+                .when(mockItemRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(item));
+
+        Mockito
+                .when(mockBookingRepository.findById(1L))
+                .thenReturn(Optional.of(booking));
+
+        NotFoundException notFoundException = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getBooking(2L, 1L));
+
+        Assertions.assertEquals("Бронь (id = 2) не найдена", notFoundException.getMessage());
+
+        notFoundException = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getBooking(1L, 3L));
+
+        Assertions.assertEquals("Пользователь (id = 3) не является ни автором бронирования, ни владельцем вещи (id = 1)", notFoundException.getMessage());
+
+        BookingFullDto bookingFullDto = bookingService.getBooking(1L, 1L).get();
+        Assertions.assertEquals(booking.getStatus(), bookingFullDto.getStatus());
     }
 
     private Item makeItem(long userId, String name, String desc) {
@@ -185,7 +398,8 @@ class BookingServiceImplTest {
         return user;
     }
 
-    private Booking makeBooking(long userId, long itemId, LocalDateTime start, LocalDateTime end, BookingStatus status) {
+    private Booking makeBooking(long userId, long itemId, LocalDateTime start, LocalDateTime end, BookingStatus
+            status) {
         Booking booking = new Booking();
         booking.setItemId(itemId);
         booking.setBookerId(userId);
