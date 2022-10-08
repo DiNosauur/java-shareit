@@ -77,16 +77,6 @@ class UserServiceImplTest {
         User checkUser = userService.saveUser(saveUser);
 
         Assertions.assertEquals(saveUser, checkUser);
-
-        Mockito
-                .when(mockRepository.findByEmail(Mockito.anyString()))
-                .thenReturn(Optional.of(saveUser));
-
-        final ConflictException exception = Assertions.assertThrows(
-                ConflictException.class,
-                () -> userService.saveUser(makeUser("dimano@mail.ru", "DiNо")));
-
-        Assertions.assertEquals("Пользователь с таким email уже зарегестрирован", exception.getMessage());
     }
 
     @Test
@@ -96,6 +86,20 @@ class UserServiceImplTest {
 
         User getUser = makeUser("dimano@mail.ru", "Dima");
         getUser.setId(1L);
+
+        Mockito
+                .when(mockRepository.findByEmail(Mockito.anyString()))
+                .thenReturn(Optional.of(getUser));
+
+        final ConflictException exception = Assertions.assertThrows(
+                ConflictException.class,
+                () -> userService.updateUser(makeUser("dimano@mail.ru", "DiNо")));
+
+        Assertions.assertEquals("Пользователь с таким email уже зарегестрирован", exception.getMessage());
+
+        Mockito
+                .when(mockRepository.findByEmail(Mockito.anyString()))
+                .thenReturn(Optional.empty());
 
         Mockito
                 .when(mockRepository.findById(Mockito.anyLong()))

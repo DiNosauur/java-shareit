@@ -32,7 +32,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User saveUser(User user) {
         log.info("Добавление пользователя {}", user.toString());
-        validate(user);
         return repository.save(user);
     }
 
