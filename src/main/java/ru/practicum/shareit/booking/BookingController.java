@@ -26,7 +26,8 @@ public class BookingController {
     public ResponseEntity<BookingFullDto> updateBooking(@PathVariable long id,
                                                         @RequestHeader("X-Sharer-User-Id") long userId,
                                                         @RequestParam Boolean approved) {
-        return service.updateBooking(id, userId, approved).map(updatedBooking -> new ResponseEntity<>(updatedBooking, HttpStatus.OK))
+        return service.updateBooking(id, userId, approved)
+                .map(updatedBooking -> new ResponseEntity<>(updatedBooking, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

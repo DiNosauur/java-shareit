@@ -12,7 +12,8 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> findAllByBookerId(long bookerId, Pageable pageable);
 
-    Page<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(long bookerId, LocalDateTime start, LocalDateTime end, Pageable pageable);
+    Page<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(
+            long bookerId, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
     Page<Booking> findAllByBookerIdAndEndBefore(long bookerId, LocalDateTime end, Pageable pageable);
 
@@ -52,5 +53,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             nativeQuery = true)
     Optional<Booking> findNextBooking(long itemId, long userId, LocalDateTime now);
 
-    Optional<Booking> findByItemIdAndBookerIdAndStatusAndEndBefore(long itemId, long userId, BookingStatus status, LocalDateTime now);
+    Optional<Booking> findByItemIdAndBookerIdAndStatusAndEndBefore(
+            long itemId, long userId, BookingStatus status, LocalDateTime now);
 }

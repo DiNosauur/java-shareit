@@ -83,20 +83,26 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findLastBooking() {
+    void findLastBookingIsPresent() {
         Optional<Booking> foundBookings = repository.findLastBooking(itemId, ownerId, LocalDateTime.now());
         assertThat(foundBookings.isPresent());
+    }
 
-        foundBookings = repository.findLastBooking(itemId, ownerId, LocalDateTime.now().minusDays(11));
+    @Test
+    void findLastBookingIsEmpty() {
+        Optional<Booking> foundBookings = repository.findLastBooking(itemId, ownerId, LocalDateTime.now().minusDays(11));
         assertThat(foundBookings.isEmpty());
     }
 
     @Test
-    void findNextBooking() {
+    void findNextBookingIsPresent() {
         Optional<Booking> foundBookings = repository.findNextBooking(itemId, ownerId, LocalDateTime.now());
         assertThat(foundBookings.isPresent());
+    }
 
-        foundBookings = repository.findNextBooking(itemId, ownerId, LocalDateTime.now().plusDays(11));
+    @Test
+    void findNextBookingIsEmpty() {
+        Optional<Booking> foundBookings = repository.findNextBooking(itemId, ownerId, LocalDateTime.now().plusDays(11));
         assertThat(foundBookings.isEmpty());
     }
 }

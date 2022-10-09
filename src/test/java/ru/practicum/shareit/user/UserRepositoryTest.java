@@ -29,11 +29,14 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByEmail() {
+    void findByEmailIsPresent() {
         Optional<User> foundItem = repository.findByEmail("dimano@mail.ru");
         assertThat(foundItem.isPresent());
+    }
 
-        foundItem = repository.findByEmail("dimano2@mail.ru");
+    @Test
+    void findByEmailIsEmpty() {
+        Optional<User> foundItem = repository.findByEmail("dimano2@mail.ru");
         assertThat(foundItem.isEmpty());
     }
 }
