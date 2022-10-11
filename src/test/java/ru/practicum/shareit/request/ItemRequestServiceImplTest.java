@@ -43,6 +43,7 @@ class ItemRequestServiceImplTest {
 
     @Test
     void findUserItemRequests() {
+        // given
         User user = makeUser("dimano@mail.ru", "Dima");
         em.persist(user);
         em.flush();
@@ -58,8 +59,10 @@ class ItemRequestServiceImplTest {
         }
         em.flush();
 
+        // when
         Collection<ItemRequestFullDto> targetItemRequests = service.findUserItemRequests(user.getId(), 0, 20);
 
+        // then
         assertThat(targetItemRequests, hasSize(sourceItemRequests.size()));
         for (ItemRequest sourceItemRequest : sourceItemRequests) {
             assertThat(targetItemRequests, hasItem(allOf(
@@ -80,12 +83,16 @@ class ItemRequestServiceImplTest {
 
     @Test
     void saveItemRequest() {
+        // given
         User user = makeUser("dimano@mail.ru", "Dima");
         long userId = userService.saveUser(user).getId();
 
         ItemRequestDto itemRequestDto = new ItemRequestDto(1L, "палатка");
+
+        // when
         service.saveItemRequest(itemRequestDto, userId);
 
+        // then
         TypedQuery<ItemRequest> query =
                 em.createQuery("Select r from ItemRequest r where r.description = :desc", ItemRequest.class);
         ItemRequest itemRequest = query.setParameter("desc", itemRequestDto.getDescription()).getSingleResult();
@@ -95,7 +102,8 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void findAllItemRequests() {
+    void findAllItemRequestsUserIsNotFaund() {
+        // given
         ItemRequestRepository mockRepository = Mockito.mock(ItemRequestRepository.class);
         ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
         UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
@@ -109,23 +117,80 @@ class ItemRequestServiceImplTest {
                 .when(mockUserRepository.findById(1L))
                 .thenReturn(Optional.of(user));
 
+        // when
         final NotFoundException notFoundException = Assertions.assertThrows(
                 NotFoundException.class,
                 () -> itemRequestService.findAllItemRequests(2L, 0, 20));
 
+        // then
         Assertions.assertEquals("Пользователь (id = 2) не найден", notFoundException.getMessage());
+    }
 
+    @Test
+    void findAllItemRequestsFromIsNotCorrected() {
+        // given
+        ItemRequestRepository mockRepository = Mockito.mock(ItemRequestRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        ItemRequestServiceImpl itemRequestService =
+                new ItemRequestServiceImpl(mockRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Mockito
+                .when(mockUserRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        // when
         ValidationException validationException = Assertions.assertThrows(
                 ValidationException.class,
                 () -> itemRequestService.findAllItemRequests(1L, -1, 20));
 
+        // then
         Assertions.assertEquals("Параметр from (-1) задан некорректно", validationException.getMessage());
+    }
 
-        validationException = Assertions.assertThrows(
+    @Test
+    void findAllItemRequestsSizeIsNotCorrected() {
+        // given
+        ItemRequestRepository mockRepository = Mockito.mock(ItemRequestRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        ItemRequestServiceImpl itemRequestService =
+                new ItemRequestServiceImpl(mockRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Mockito
+                .when(mockUserRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        // when
+        ValidationException validationException = Assertions.assertThrows(
                 ValidationException.class,
                 () -> itemRequestService.findAllItemRequests(1L, 0, 0));
 
+        // then
         Assertions.assertEquals("Параметр size (0) задан некорректно", validationException.getMessage());
+    }
+
+    @Test
+    void findAllItemRequestsIsOk() {
+        // given
+        ItemRequestRepository mockRepository = Mockito.mock(ItemRequestRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        ItemRequestServiceImpl itemRequestService =
+                new ItemRequestServiceImpl(mockRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Mockito
+                .when(mockUserRepository.findById(1L))
+                .thenReturn(Optional.of(user));
 
         List<ItemRequest> sourceItemRequests = List.of(
                 makeItemRequest(user.getId(), "4-местная байдарка", LocalDateTime.now()),
@@ -141,9 +206,11 @@ class ItemRequestServiceImplTest {
                 .when(mockRepository.findByRequestorNotOrderByCreatedDesc(1L, PageRequest.of(0, 20)))
                 .thenReturn(new PageImpl<>(sourceItemRequests));
 
+        // when
         Collection<ItemRequestFullDto> targetItemRequests =
                 itemRequestService.findAllItemRequests(user.getId(), 0, 20);
 
+        // then
         assertThat(targetItemRequests, hasSize(sourceItemRequests.size()));
         for (ItemRequest sourceItemRequest : sourceItemRequests) {
             assertThat(targetItemRequests, hasItem(allOf(
@@ -155,7 +222,8 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void getItemRequest() {
+    void getItemRequestIsOk() {
+        // given
         ItemRequestRepository mockRepository = Mockito.mock(ItemRequestRepository.class);
         ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
         UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
@@ -176,9 +244,37 @@ class ItemRequestServiceImplTest {
                 .when(mockRepository.findById(1L))
                 .thenReturn(Optional.of(itemRequest));
 
-        Assertions.assertEquals(true, itemRequestService.getItemRequest(1L, 1L).isPresent());
+        // when and then
+        Assertions.assertEquals(true,
+                itemRequestService.getItemRequest(1L, 1L).isPresent());
+    }
 
-        Assertions.assertEquals(true, itemRequestService.getItemRequest(2L, 1L).isEmpty());
+    @Test
+    void getItemRequestIsNotFound() {
+        // given
+        ItemRequestRepository mockRepository = Mockito.mock(ItemRequestRepository.class);
+        ItemRepository mockItemRepository = Mockito.mock(ItemRepository.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        ItemRequestServiceImpl itemRequestService =
+                new ItemRequestServiceImpl(mockRepository, mockItemRepository, mockUserRepository);
+
+        User user = makeUser("dimano@mail.ru", "Dima");
+        user.setId(1L);
+
+        Mockito
+                .when(mockUserRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        ItemRequest itemRequest = makeItemRequest(user.getId(), "палатка", LocalDateTime.now());
+        itemRequest.setId(1L);
+
+        Mockito
+                .when(mockRepository.findById(1L))
+                .thenReturn(Optional.of(itemRequest));
+
+        // when and then
+        Assertions.assertEquals(true,
+                itemRequestService.getItemRequest(2L, 1L).isEmpty());
     }
 
     private User makeUser(String email, String name) {

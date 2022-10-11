@@ -121,7 +121,7 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void findItemById() throws Exception {
+    void findItemByIdIsOk() throws Exception {
         when(service.getItemRequest(anyLong(), anyLong()))
                 .thenReturn(Optional.of(itemRequestFullDto));
 
@@ -136,7 +136,10 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$.created", is(itemRequestFullDto.getCreated().toString())))
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].id", is(item.getId()), Long.class));
+    }
 
+    @Test
+    void findItemByIdIsNotFound() throws Exception {
         when(service.getItemRequest(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
 
