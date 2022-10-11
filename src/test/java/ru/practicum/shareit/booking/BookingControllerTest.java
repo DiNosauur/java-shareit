@@ -93,7 +93,7 @@ class BookingControllerTest {
     }
 
     @Test
-    void updateBooking() throws Exception {
+    void updateBookingOk() throws Exception {
         when(service.updateBooking(anyLong(), anyLong(), anyBoolean()))
                 .thenReturn(Optional.of(bookingFullDto));
 
@@ -112,7 +112,10 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.booker.name", is(bookingFullDto.getBooker().getName())))
                 .andExpect(jsonPath("$.item.id", is(bookingFullDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.item.name", is(bookingFullDto.getItem().getName())));
+    }
 
+    @Test
+    void updateBookingNotFound() throws Exception {
         when(service.updateBooking(1L, 1L, true))
                 .thenReturn(Optional.empty());
 
@@ -125,8 +128,9 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+
     @Test
-    void findBookingById() throws Exception {
+    void findBookingByIdOk() throws Exception {
         when(service.getBooking(anyLong(), anyLong()))
                 .thenReturn(Optional.of(bookingFullDto));
 
@@ -144,7 +148,10 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.booker.name", is(bookingFullDto.getBooker().getName())))
                 .andExpect(jsonPath("$.item.id", is(bookingFullDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.item.name", is(bookingFullDto.getItem().getName())));
+    }
 
+    @Test
+    void findBookingByIdNotFound() throws Exception {
         when(service.getBooking(1L, 1L))
                 .thenReturn(Optional.empty());
 
