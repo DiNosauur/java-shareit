@@ -31,7 +31,7 @@ class UserServiceImplTest {
 
     @Test
     void getAllUsers() {
-
+        // given
         List<User> sourceUsers = List.of(
                 makeUser("ivan@mail.ru", "Ivan"),
                 makeUser("petr@mail.ru", "Petr"),
@@ -43,8 +43,10 @@ class UserServiceImplTest {
         }
         em.flush();
 
+        // when
         Collection<User> targetUsers = service.getAllUsers();
 
+        // then
         assertThat(targetUsers, hasSize(sourceUsers.size()));
         for (User sourceUser : sourceUsers) {
             assertThat(targetUsers, hasItem(allOf(
@@ -64,6 +66,7 @@ class UserServiceImplTest {
 
     @Test
     void saveUser() {
+        // given
         UserRepository mockRepository = Mockito.mock(UserRepository.class);
         UserServiceImpl userService = new UserServiceImpl(mockRepository);
 
@@ -74,13 +77,16 @@ class UserServiceImplTest {
                 .when(mockRepository.save(Mockito.any()))
                 .thenReturn(saveUser);
 
+        // when
         User checkUser = userService.saveUser(saveUser);
 
+        // then
         Assertions.assertEquals(saveUser, checkUser);
     }
 
     @Test
-    void updateUser() {
+    void updateUserMailAlreadyExists() {
+        // given
         UserRepository mockRepository = Mockito.mock(UserRepository.class);
         UserServiceImpl userService = new UserServiceImpl(mockRepository);
 
@@ -91,11 +97,27 @@ class UserServiceImplTest {
                 .when(mockRepository.findByEmail(Mockito.anyString()))
                 .thenReturn(Optional.of(getUser));
 
+        // when
         final ConflictException exception = Assertions.assertThrows(
                 ConflictException.class,
                 () -> userService.updateUser(makeUser("dimano@mail.ru", "DiNо")));
 
+        // then
         Assertions.assertEquals("Пользователь с таким email уже зарегестрирован", exception.getMessage());
+    }
+
+    @Test
+    void updateUserIsOk() {
+        // given
+        UserRepository mockRepository = Mockito.mock(UserRepository.class);
+        UserServiceImpl userService = new UserServiceImpl(mockRepository);
+
+        User getUser = makeUser("dimano@mail.ru", "Dima");
+        getUser.setId(1L);
+
+        Mockito
+                .when(mockRepository.findByEmail(Mockito.anyString()))
+                .thenReturn(Optional.of(getUser));
 
         Mockito
                 .when(mockRepository.findByEmail(Mockito.anyString()))
@@ -105,14 +127,16 @@ class UserServiceImplTest {
                 .when(mockRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(getUser));
 
+        // when
         User updUser = userService.updateUser(makeUser("dimano@yandex.ru", "Dmitriy")).get();
 
+        // then
         Assertions.assertEquals("dimano@yandex.ru", updUser.getEmail());
         Assertions.assertEquals("Dmitriy", updUser.getName());
     }
 
     @Test
-    void deleteUser() {
+    void deleteUserIsOk() {
         UserRepository mockRepository = Mockito.mock(UserRepository.class);
         UserServiceImpl userService = new UserServiceImpl(mockRepository);
 
@@ -124,6 +148,19 @@ class UserServiceImplTest {
                 .thenReturn(Optional.of(getUser));
 
         Assertions.assertEquals(true, userService.deleteUser(1L));
+    }
+
+    @Test
+    void deleteUserIsNotFound() {
+        UserRepository mockRepository = Mockito.mock(UserRepository.class);
+        UserServiceImpl userService = new UserServiceImpl(mockRepository);
+
+        User getUser = makeUser("dimano@mail.ru", "Dima");
+        getUser.setId(1L);
+
+        Mockito
+                .when(mockRepository.findById(1L))
+                .thenReturn(Optional.of(getUser));
 
         Assertions.assertEquals(false, userService.deleteUser(2L));
     }

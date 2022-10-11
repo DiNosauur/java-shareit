@@ -75,7 +75,7 @@ class UserControllerTest {
     }
 
     @Test
-    void updateUser() throws Exception {
+    void updateUserIsOk() throws Exception {
         when(service.updateUser(any()))
                 .thenReturn(Optional.of(user));
 
@@ -88,7 +88,10 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id", is(user.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(user.getName())))
                 .andExpect(jsonPath("$.email", is(user.getEmail())));
+    }
 
+    @Test
+    void updateUserIsNotFound() throws Exception {
         when(service.updateUser(any()))
                 .thenReturn(Optional.empty());
 
@@ -101,7 +104,7 @@ class UserControllerTest {
     }
 
     @Test
-    void findUserById() throws Exception {
+    void findUserByIdIsOk() throws Exception {
         when(service.getUser(anyLong()))
                 .thenReturn(Optional.of(user));
 
@@ -113,7 +116,10 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id", is(user.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(user.getName())))
                 .andExpect(jsonPath("$.email", is(user.getEmail())));
+    }
 
+    @Test
+    void findUserByIdIsNotFound() throws Exception {
         when(service.getUser(anyLong()))
                 .thenReturn(Optional.empty());
 
@@ -125,7 +131,7 @@ class UserControllerTest {
     }
 
     @Test
-    void deleteUserById() throws Exception {
+    void deleteUserByIdIsOk() throws Exception {
         when(service.deleteUser(anyLong()))
                 .thenReturn(true);
 
@@ -134,7 +140,10 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
 
+    @Test
+    void deleteUserByIdIsNotFound() throws Exception {
         when(service.deleteUser(anyLong()))
                 .thenReturn(false);
 
