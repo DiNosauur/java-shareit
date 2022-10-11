@@ -132,7 +132,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void updateItem() throws Exception {
+    void updateItemIsOk() throws Exception {
         when(service.updateItem(anyLong(), any(), anyLong()))
                 .thenReturn(Optional.of(item));
 
@@ -149,7 +149,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.available", is(item.getAvailable())))
                 .andExpect(jsonPath("$.owner", is(item.getOwner()), Long.class))
                 .andExpect(jsonPath("$.requestId", is(item.getRequestId()), Long.class));
+    }
 
+    @Test
+    void updateItemIsNotFound() throws Exception {
         when(service.updateItem(anyLong(), any(), anyLong()))
                 .thenReturn(Optional.empty());
 
@@ -163,7 +166,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void findItemById() throws Exception {
+    void findItemByIdIsOk() throws Exception {
         when(service.getItem(anyLong(), anyLong()))
                 .thenReturn(Optional.of(itemFullDto));
 
@@ -189,7 +192,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.comments[0].text", is(commentDto.getText())))
                 .andExpect(jsonPath("$.comments[0].created", is(commentDto.getCreated().toString())))
                 .andExpect(jsonPath("$.comments[0].authorName", is(commentDto.getAuthorName())));
+    }
 
+    @Test
+    void findItemByIdIsNotFound() throws Exception {
         when(service.getItem(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
 
@@ -202,7 +208,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void deleteItemById() throws Exception {
+    void deleteItemByIdIsOk() throws Exception {
         when(service.deleteItem(anyLong(), anyLong()))
                 .thenReturn(true);
 
@@ -212,7 +218,10 @@ class ItemControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
 
+    @Test
+    void deleteItemByIdIsNotFound() throws Exception {
         when(service.deleteItem(anyLong(), anyLong()))
                 .thenReturn(false);
 
@@ -247,7 +256,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void addItemComment() throws Exception {
+    void addItemCommentIsOk() throws Exception {
         when(service.addItemComment(anyLong(), anyLong(), any()))
                 .thenReturn(Optional.of(commentDto));
 
@@ -262,7 +271,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.text", is(commentDto.getText())))
                 .andExpect(jsonPath("$.authorName", is(commentDto.getAuthorName())))
                 .andExpect(jsonPath("$.created", is(commentDto.getCreated().toString())));
+    }
 
+    @Test
+    void addItemCommentIsNotFound() throws Exception {
         when(service.addItemComment(anyLong(), anyLong(), any()))
                 .thenReturn(Optional.empty());
 
