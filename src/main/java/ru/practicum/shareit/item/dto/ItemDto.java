@@ -14,4 +14,5 @@ public class ItemDto {
     @NotBlank(message = "Description is required")
     private String description; // развёрнутое описание;
     private Boolean available; // статус о том, доступна или нет вещь для аренды;
+    private Long requestId; // если вещь была создана по запросу другого пользователя;
 }

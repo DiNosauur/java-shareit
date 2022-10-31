@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,15 +10,16 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    Collection<Booking> findAllByBookerId(long bookerId, Sort sort);
+    Page<Booking> findAllByBookerId(long bookerId, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(long bookerId, LocalDateTime start, LocalDateTime end, Sort sort);
+    Page<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(
+            long bookerId, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndEndBefore(long bookerId, LocalDateTime end, Sort sort);
+    Page<Booking> findAllByBookerIdAndEndBefore(long bookerId, LocalDateTime end, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndStartAfter(long bookerId, LocalDateTime start, Sort sort);
+    Page<Booking> findAllByBookerIdAndStartAfter(long bookerId, LocalDateTime start, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndStatus(long bookerId, BookingStatus status, Sort sort);
+    Page<Booking> findAllByBookerIdAndStatus(long bookerId, BookingStatus status, Pageable pageable);
 
     Collection<Booking> findByItemIdAndStatusAndStartBeforeAndEndAfter(
             long itemId, BookingStatus status, LocalDateTime start, LocalDateTime end);
@@ -33,7 +35,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "        (?2 = 'REJECTED' and b.status = ?2) " +
             "       )" +
             " order by b.start desc")
-    Collection<Booking> findAllByOwnerId(long ownerId, String state, LocalDateTime localDateTime);
+    Page<Booking> findAllByOwnerId(long ownerId, String state, LocalDateTime localDateTime, Pageable pageable);
 
     @Query(value = "select b.* from bookings b " +
             " where b.item_id = :itemId " +
@@ -51,5 +53,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             nativeQuery = true)
     Optional<Booking> findNextBooking(long itemId, long userId, LocalDateTime now);
 
-    Optional<Booking> findByItemIdAndBookerIdAndStatusAndEndBefore(long itemId, long userId, BookingStatus status, LocalDateTime now);
+    Optional<Booking> findByItemIdAndBookerIdAndStatusAndEndBefore(
+            long itemId, long userId, BookingStatus status, LocalDateTime now);
 }

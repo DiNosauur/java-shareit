@@ -20,5 +20,5 @@ public class Item {
     @Column(name = "owner_id")
     private Long owner; // владелец вещи;
     @Column(name = "request_id")
-    private Long itemRequest; // если вещь была создана по запросу другого пользователя;
+    private Long requestId; // если вещь была создана по запросу другого пользователя;
 }

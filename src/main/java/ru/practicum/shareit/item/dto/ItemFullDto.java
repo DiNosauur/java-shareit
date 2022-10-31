@@ -11,6 +11,7 @@ public class ItemFullDto {
     private String name; // краткое название;
     private String description; // развёрнутое описание;
     private Boolean available; // статус о том, доступна или нет вещь для аренды;
+    private Long requestId; // если вещь была создана по запросу другого пользователя;
     private Booking lastBooking; // последнее бронирование
     private Booking nextBooking; // ближайшее следующее бронирование
     private Collection<CommentDto> comments; // отзывы о вещи

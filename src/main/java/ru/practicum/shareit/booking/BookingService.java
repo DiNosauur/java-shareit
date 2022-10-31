@@ -11,9 +11,9 @@ public interface BookingService {
 
     Optional<BookingFullDto> updateBooking(Long id, Long ownerId, Boolean approved);
 
-    Collection<BookingFullDto> findUserBookings(long bookerId, String state);
+    Collection<BookingFullDto> findUserBookings(long bookerId, String state, int from, int size);
 
-    Collection<BookingFullDto> findOwnerBookings(long ownerId, String state);
+    Collection<BookingFullDto> findOwnerBookings(long ownerId, String state, int from, int size);
 
     Optional<BookingFullDto> getBooking(long id, long userId);
 }

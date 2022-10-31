@@ -86,7 +86,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() == null) {
             throw new ValidationException("Не передан статус вещи");
         }
-        Item item = ItemMapper.toItem(itemDto, userId, null);
+        Item item = ItemMapper.toItem(itemDto, userId);
         return repository.save(item);
     }
 
