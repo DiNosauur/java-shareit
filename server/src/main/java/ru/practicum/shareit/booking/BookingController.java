@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingFullDto;
 
-import javax.validation.Valid;
 import java.util.Collection;
 
 @RestController
@@ -17,7 +16,7 @@ public class BookingController {
     private final BookingService service;
 
     @PostMapping
-    public ResponseEntity<BookingFullDto> createBooking(@Valid @RequestBody BookingDto bookingDto,
+    public ResponseEntity<BookingFullDto> createBooking(@RequestBody BookingDto bookingDto,
                                                         @RequestHeader("X-Sharer-User-Id") long userId) {
         return new ResponseEntity<>(service.saveBooking(bookingDto, userId), HttpStatus.CREATED);
     }

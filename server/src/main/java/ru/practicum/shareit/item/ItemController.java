@@ -9,7 +9,6 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemFullDto;
 import ru.practicum.shareit.item.model.Item;
 
-import javax.validation.Valid;
 import java.util.Collection;
 
 @RestController
@@ -24,7 +23,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public ResponseEntity<Item> createItem(@Valid @RequestBody ItemDto itemDto,
+    public ResponseEntity<Item> createItem(@RequestBody ItemDto itemDto,
                                            @RequestHeader("X-Sharer-User-Id") long userId) {
         return new ResponseEntity<>(service.saveItem(itemDto, userId), HttpStatus.CREATED);
     }
@@ -58,7 +57,7 @@ public class ItemController {
 
     @PostMapping("/{id}/comment")
     public ResponseEntity<CommentDto> addItemComment(@PathVariable long id,
-                                                     @Valid @RequestBody CommentDto commentDto,
+                                                     @RequestBody CommentDto commentDto,
                                                      @RequestHeader("X-Sharer-User-Id") long userId) {
         return service.addItemComment(id, userId, commentDto).map(comment -> new ResponseEntity<>(comment, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
