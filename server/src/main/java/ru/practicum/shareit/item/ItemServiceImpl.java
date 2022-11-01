@@ -36,7 +36,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<ItemFullDto> findUserItems(long userId) {
         log.info("Поиск всех вещей пользователя (id={})", userId);
-        return repository.findByOwner(userId)
+        return repository.findByOwnerOrderById(userId)
                 .stream()
                 .map(item -> ItemMapper.toItemFullDto(item,
                         bookingRepository.findLastBooking(item.getId(), userId, LocalDateTime.now()),
@@ -139,6 +139,7 @@ public class ItemServiceImpl implements ItemService {
         return text == null || text.isBlank() ? new ArrayList<>() : repository.search(text);
     }
 
+    @Transactional
     @Override
     public Optional<CommentDto> addItemComment(long itemId, long userId, CommentDto commentDto) {
         log.info("Добавление комментария ({}) о вещи (id={}) пользователем (id={})",
