@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 
 import javax.validation.Valid;
@@ -28,6 +29,7 @@ public class ItemRequestController {
     public ResponseEntity<Object> findUserItemRequests(@RequestHeader("X-Sharer-User-Id") long userId,
                                                        @RequestParam(defaultValue = "0") int from,
                                                        @RequestParam(defaultValue = "20") int size) {
+        validatePage(from, size);
         return itemRequestClient.getItemRequests(userId, from, size);
     }
 
@@ -35,6 +37,7 @@ public class ItemRequestController {
     public ResponseEntity<Object> findAllItemRequests(@RequestHeader("X-Sharer-User-Id") long userId,
                                                       @RequestParam(defaultValue = "0") int from,
                                                       @RequestParam(defaultValue = "20") int size) {
+        validatePage(from, size);
         return itemRequestClient.getAllItemRequests(userId, from, size);
     }
 
@@ -43,4 +46,16 @@ public class ItemRequestController {
                                                @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemRequestClient.getItemRequest(userId, id);
     }
+
+    private int validatePage(int from, int size) {
+        if (size <= 0) {
+            throw new ValidationException(String.format("Параметр size (%s) задан некорректно", size));
+        }
+        if (from < 0) {
+            throw new ValidationException(String.format("Параметр from (%s) задан некорректно", from));
+        }
+        int page = from / size;
+        return page;
+    }
+
 }

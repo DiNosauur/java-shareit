@@ -6,7 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestFullDto;
@@ -34,20 +33,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return user.get();
     }
 
-    private int validatePage(int from, int size) {
-        if (size <= 0) {
-            throw new ValidationException(String.format("Параметр size (%s) задан некорректно", size));
-        }
-
-        if (from < 0) {
-            throw new ValidationException(String.format("Параметр from (%s) задан некорректно", from));
-        }
-
-        int page = from / size;
-
-        return page;
-    }
-
     @Transactional
     @Override
     public ItemRequest saveItemRequest(ItemRequestDto itemRequestDto, long userId) {
@@ -61,7 +46,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public Collection<ItemRequestFullDto> findAllItemRequests(long userId, int from, int size) {
         log.info("Поиск всех запросов не от пользователя (id={})", userId);
         validateUser(userId);
-        int page = validatePage(from, size);
+        int page = from / size;
         return repository.findByRequestorNotOrderByCreatedDesc(userId, PageRequest.of(page, size))
                 .stream()
                 .map(itemRequest -> ItemRequestMapper.toItemRequestFullDto(itemRequest,
@@ -75,7 +60,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public Collection<ItemRequestFullDto> findUserItemRequests(long userId, int from, int size) {
         log.info("Поиск всех запросов пользователя (id={})", userId);
         validateUser(userId);
-        int page = validatePage(from, size);
+        int page = from / size;
         return repository.findByRequestorOrderByCreatedDesc(userId, PageRequest.of(page, size))
                 .stream()
                 .map(itemRequest -> ItemRequestMapper.toItemRequestFullDto(itemRequest,

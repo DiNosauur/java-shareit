@@ -83,36 +83,10 @@ public class BookingServiceImpl implements BookingService {
         return booking.get();
     }
 
-    private void validateBooking(BookingDto bookingDto) {
-        if (bookingDto.getStart().isBefore(LocalDateTime.now())) {
-            throw new ValidationException(String.format(
-                    "Дата начала брони (%s) находится в прошлом", bookingDto.getStart()));
-        } else if (bookingDto.getEnd().isBefore(LocalDateTime.now())) {
-            throw new ValidationException(String.format(
-                    "Дата окончания брони (%s) находится в прошлом", bookingDto.getEnd()));
-        } else if (bookingDto.getEnd().isBefore(bookingDto.getStart())) {
-            throw new ValidationException(String.format(
-                    "Дата окончания брони (%s) раньше даты начала (%s)",
-                    bookingDto.getEnd(), bookingDto.getStart()));
-        }
-    }
-
-    private int validatePage(int from, int size) {
-        if (size <= 0) {
-            throw new ValidationException(String.format("Параметр size (%s) задан некорректно", size));
-        }
-        if (from < 0) {
-            throw new ValidationException(String.format("Параметр from (%s) задан некорректно", from));
-        }
-        int page = from / size;
-        return page;
-    }
-
     @Transactional
     @Override
     public BookingFullDto saveBooking(BookingDto bookingDto, Long bookerId) {
         log.info("Заявка на бронирование {} от пользователя (id={})", bookingDto.toString(), bookerId);
-        validateBooking(bookingDto);
         User booker = validateUser(bookerId);
         Item item = validateItem(bookingDto, bookerId);
         Booking booking = repository.save(
@@ -141,7 +115,7 @@ public class BookingServiceImpl implements BookingService {
     public Collection<BookingFullDto> findUserBookings(long bookerId, String state, int from, int size) {
         log.info("Поиск бронирований от пользователя (id={}) для state = {}", bookerId, state);
         User booker = validateUser(bookerId);
-        int page = validatePage(from, size);
+        int page = from / size;
         if (state.equals(BookingState.ALL.name())) {
             return repository.findAllByBookerId(bookerId, PageRequest.of(page, size,
                     Sort.by(Sort.Direction.DESC, "start")))
@@ -203,7 +177,7 @@ public class BookingServiceImpl implements BookingService {
         } catch (Exception e) {
             throw new ValidationException(String.format("Unknown state: %s", state));
         }
-        int page = validatePage(from, size);
+        int page = from / size;
         return repository.findAllByOwnerId(ownerId, state, LocalDateTime.now(),
                 PageRequest.of(page, size))
                 .stream()
